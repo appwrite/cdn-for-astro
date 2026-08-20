@@ -94,6 +94,32 @@ Maintainers only.
 
 Publishing requires the `NPM_TOKEN` secret and the `npm` environment on this repository.
 
+## Module format
+
+This package is **ESM-only**, deliberately, and matches how `astro` and `@astrojs/node` are
+published: `"type": "module"`, plain string `exports`, no `main`, `module`, `types`, `jsdelivr` or
+`unpkg` fields. Please do not add a CommonJS or IIFE build to bring it in line with the browser
+SDKs — the shapes differ because the packages differ.
+
+- **CommonJS is unreachable.** Astro's config loader only accepts `astro.config.mjs`, `.js`, `.ts`
+  and `.mts`; there is no `.cjs`. `astro` is itself ESM-only. No supported consumer can `require()`
+  this package.
+- **A browser build cannot work.** The provider imports `node:async_hooks`, reads `process.env`, and
+  loads `node-appwrite`, which depends on `undici`. There is no browser API surface here: this
+  package configures a build and runs inside the site's server function.
+- **A dual build would introduce a real bug.** `provider.ts` holds an `AsyncLocalStorage` and
+  `utils.ts` a warning set, both module-level. Two copies loaded in one process means `onRequest`
+  populates one store and `invalidate()` reads the other, which surfaces as an
+  `AppwriteCacheError` about an unresolvable domain rather than as an obvious loading problem.
+
+`attw` therefore runs under `--profile esm-only`. Its `node10` and CommonJS marks are correct for a
+package like this, and failing CI on them would be failing on a non-problem.
+
+**jsDelivr needs no configuration.** Every npm package is served automatically, scoped ones
+included, so `https://cdn.jsdelivr.net/npm/@appwrite.io/cdn-for-astro` works as soon as a version is
+published. The `jsdelivr` and `unpkg` fields in a package like `appwrite` only choose which file the
+bare URL resolves to, which matters for a `<script>` tag and not here.
+
 ## Branch protection
 
 The rules for `main` live in [`.github/rulesets/main.json`](./.github/rulesets/main.json) so that
