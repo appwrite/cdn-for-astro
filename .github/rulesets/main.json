@@ -52,7 +52,10 @@
             "context": "Package checks"
           },
           {
-            "context": "Build the example"
+            "context": "Build the example on Node.js 22.12.0"
+          },
+          {
+            "context": "Build the example on Node.js 24"
           }
         ]
       }
