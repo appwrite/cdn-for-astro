@@ -20,7 +20,7 @@ match the others.
 
 ## Getting started
 
-Requires Node.js 20.3 or newer.
+Requires Node.js 22.12 or newer, matching the `engines.node` of the `astro` peer dependency.
 
 ```bash
 git clone https://github.com/appwrite/cdn-for-astro.git

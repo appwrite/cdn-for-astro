@@ -9,8 +9,12 @@
     }
   },
   "rules": [
-    { "type": "deletion" },
-    { "type": "non_fast_forward" },
+    {
+      "type": "deletion"
+    },
+    {
+      "type": "non_fast_forward"
+    },
     {
       "type": "pull_request",
       "parameters": {
@@ -29,13 +33,27 @@
         "strict_required_status_checks_policy": true,
         "do_not_enforce_on_create": false,
         "required_status_checks": [
-          { "context": "Lint and format" },
-          { "context": "Type check" },
-          { "context": "Test on Node.js 20" },
-          { "context": "Test on Node.js 22" },
-          { "context": "Test on Node.js 24" },
-          { "context": "Package checks" },
-          { "context": "Build the example" }
+          {
+            "context": "Lint and format"
+          },
+          {
+            "context": "Type check"
+          },
+          {
+            "context": "Test on Node.js 22.12.0"
+          },
+          {
+            "context": "Test on Node.js 22"
+          },
+          {
+            "context": "Test on Node.js 24"
+          },
+          {
+            "context": "Package checks"
+          },
+          {
+            "context": "Build the example"
+          }
         ]
       }
     }

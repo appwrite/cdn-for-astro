@@ -45,7 +45,7 @@ A runnable site covering all of this lives in [`examples/basic`](./examples/basi
 ## Requirements
 
 - Astro `^7.0.0`
-- Node.js `>=20.3.0`
+- Node.js `>=22.12.0`, which is what Astro 7 itself requires
 
 ## Options
 
