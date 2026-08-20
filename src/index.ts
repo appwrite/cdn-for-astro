@@ -1,1 +1,1 @@
-export { type AppwriteCacheConfig, cacheAppwrite } from './cache/index.js';
+export { type AppwriteCacheConfig, AppwriteCacheError, cacheAppwrite } from './cache/index.js';

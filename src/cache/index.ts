@@ -1,5 +1,7 @@
 import type { CacheProviderConfig } from 'astro';
 
+export { AppwriteCacheError } from './utils.js';
+
 /**
  * Options for {@link cacheAppwrite}.
  *

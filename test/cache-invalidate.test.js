@@ -45,9 +45,14 @@ const { server, endpoint } = await (async () => {
 		});
 	});
 
-	await new Promise((resolve) => stub.listen(0, '127.0.0.1', resolve));
+	await new Promise((resolve) => stub.listen(0, '127.0.0.1', () => resolve(undefined)));
 
-	return { server: stub, endpoint: `http://127.0.0.1:${stub.address().port}/v1` };
+	const address = stub.address();
+	if (address === null || typeof address === 'string') {
+		throw new Error('Expected the stub server to be listening on a TCP port.');
+	}
+
+	return { server: stub, endpoint: `http://127.0.0.1:${address.port}/v1` };
 })();
 
 after(() => server.close());

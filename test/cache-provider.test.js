@@ -2,7 +2,9 @@ import * as assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import factory from '../dist/cache/provider.js';
 
-const provider = factory(undefined);
+// The provider interface marks its members optional; this one implements them all,
+// and a missing member fails the suite loudly rather than being skipped.
+const provider = /** @type {Required<ReturnType<typeof factory>>} */ (factory(undefined));
 const dummyRequest = new Request('https://example.appwrite.network/products/123');
 
 /** Run a request through `onRequest`, rendering `response`. */
@@ -110,7 +112,7 @@ describe('Appwrite cache provider', () => {
 
 		it('skips the no-store default when it is turned off', async () => {
 			const response = await render(new Response('hello'), {
-				provider: factory({ noStore: false }),
+				provider: /** @type {Required<ReturnType<typeof factory>>} */ (factory({ noStore: false })),
 			});
 			assert.equal(response.headers.get('Appwrite-CDN-Cache-Control'), null);
 		});

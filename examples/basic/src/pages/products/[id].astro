@@ -1,0 +1,24 @@
+---
+// No `Astro.cache.set()` here: the cache rule for this route comes from
+// `routeRules` in astro.config.mjs. Tags can still be added per request.
+const { id } = Astro.params;
+
+Astro.cache.set({ tags: [`product:${id}`] });
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>Product {id}</title>
+	</head>
+	<body>
+		<h1>Product {id}</h1>
+		<p>Rendered at {new Date().toISOString()}.</p>
+		<p>
+			Tagged <code>products</code> (from <code>routeRules</code>) and
+			<code>product:{id}</code> (from this page), so either tag purges it.
+		</p>
+		<p><a href="/">Back</a></p>
+	</body>
+</html>

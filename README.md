@@ -1,8 +1,15 @@
-# @appwrite.io/cdn-for-astro
+# Appwrite CDN for Astro
+
+[![NPM Version](https://img.shields.io/npm/v/@appwrite.io/cdn-for-astro?style=flat-square)](https://www.npmjs.com/package/@appwrite.io/cdn-for-astro)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/appwrite/cdn-for-astro/ci.yml?branch=main&style=flat-square)](https://github.com/appwrite/cdn-for-astro/actions/workflows/ci.yml)
+![License](https://img.shields.io/github/license/appwrite/cdn-for-astro.svg?style=flat-square)
+[![Discord](https://img.shields.io/discord/564160730845151244?label=discord&style=flat-square)](https://appwrite.io/discord)
 
 Official Appwrite CDN cache adapter for Astro 🚀
 
 This package brings [route caching](https://docs.astro.build/en/guides/caching/) to Astro sites hosted on [Appwrite](https://appwrite.io/). Cache hits are served by the Appwrite CDN, so the site's function is never invoked for them.
+
+![Appwrite](https://github.com/appwrite/appwrite/raw/main/public/images/github.png)
 
 ## Installation
 
@@ -14,9 +21,9 @@ Appwrite Sites runs Astro through [`@astrojs/node`](https://docs.astro.build/en/
 
 ```js
 // astro.config.mjs
+import { cacheAppwrite } from '@appwrite.io/cdn-for-astro';
 import node from '@astrojs/node';
 import { defineConfig } from 'astro/config';
-import { cacheAppwrite } from '@appwrite.io/cdn-for-astro';
 
 export default defineConfig({
   adapter: node({ mode: 'standalone' }),
@@ -32,6 +39,8 @@ export default defineConfig({
 `Astro.cache.set()`, `routeRules` and `cache.invalidate()` then behave as documented. Cache directives are sent as `Appwrite-CDN-Cache-Control` and cache tags as `Appwrite-CDN-Cache-Key`; the Appwrite edge rewrites both into whatever the CDN in front of the domain speaks, and `cache.invalidate()` purges by cache key or by path through the Appwrite API.
 
 For `cache.invalidate()` to be allowed to purge, the site's dynamic API key needs the `proxy.invalidations.write` scope (Appwrite console → your site → **Settings** → **Scopes**). Caching itself works without it.
+
+A runnable site covering all of this lives in [`examples/basic`](./examples/basic).
 
 ## Requirements
 
@@ -50,33 +59,47 @@ Every option is optional; the defaults suit a site deployed on Appwrite Sites.
 | `apiKey`    | the `x-appwrite-key` request header, then `APPWRITE_API_KEY`        | Key used to invalidate. Prefer the default: a value set here is baked into the build output.                                       |
 | `noStore`   | `true`                                                              | Send `no-store` for responses that declare no cache intent, so the CDN's default TTL cannot cache a route that never asked for it. |
 
+## Exports
+
+```js
+import { cacheAppwrite, AppwriteCacheError } from '@appwrite.io/cdn-for-astro';
+import { cacheAppwrite } from '@appwrite.io/cdn-for-astro/cache'; // same thing
+```
+
+`AppwriteCacheError` is what `cache.invalidate()` throws when it cannot work out which domain,
+endpoint, project or key to purge with. Catch it to tell a misconfiguration apart from a failed
+API call:
+
+```ts
+try {
+  await cache.invalidate({ tags: ['products'] });
+} catch (error) {
+  if (error instanceof AppwriteCacheError) {
+    // Nothing was sent: the provider could not resolve what to purge.
+  }
+  throw error;
+}
+```
+
 ## Good to know
 
 - **Cache keys are normalized.** The edge splits `Appwrite-CDN-Cache-Key` on whitespace and re-joins the keys with commas for the CDN's `Cache-Tag`, so a tag containing whitespace, a comma or a non-ASCII character is percent-encoded — identically on the response and on the purge. A tag longer than 128 characters once encoded cannot be named by a purge, so it is dropped with a warning; the response is still cached.
 - **A purge is one API call per reference per domain**, and invalidations are rate limited to 60 per minute.
 - **A path purge clears the exact path**, not copies cached under the same path with a query string. Tag those and purge by tag instead.
 - **To purge a whole domain**, call `createInvalidation({ domain, type: 'all' })` directly — Astro's `invalidate()` has no equivalent.
+- **Caching is a no-op in `astro dev`.** Astro disables it in dev, so inspect headers against a build.
 
 ## Contributing
 
-```bash
-npm install
-npm run build
-npm test
-```
-
-Tests run against the built output in `dist/`, so `npm test` builds first.
-
-Bug reports and pull requests are welcome on [GitHub][issues].
+Bug reports and pull requests are welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the
+development setup, and [SECURITY.md](./SECURITY.md) for reporting a vulnerability.
 
 ## Support
 
 - Join the [Appwrite Discord](https://appwrite.io/discord) for help with Appwrite Sites and the CDN.
 - Read the [Appwrite documentation](https://appwrite.io/docs) and the [Astro caching guide](https://docs.astro.build/en/guides/caching/).
-- Submit bug reports and feature requests as [GitHub issues][issues].
+- Submit bug reports and feature requests as [GitHub issues](https://github.com/appwrite/cdn-for-astro/issues).
 
 ## License
 
-MIT
-
-[issues]: https://github.com/appwrite/cdn-for-astro/issues
+MIT — see [LICENSE](./LICENSE).

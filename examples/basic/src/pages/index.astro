@@ -1,0 +1,33 @@
+---
+// This page opts into caching from the page itself rather than from
+// `routeRules`. Both routes end up with the same Appwrite CDN headers.
+Astro.cache.set({ maxAge: 600, swr: 60, tags: ['home'] });
+
+const products = ['1', '2', '3'];
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>Appwrite CDN for Astro</title>
+	</head>
+	<body>
+		<h1>Appwrite CDN for Astro</h1>
+		<p>Rendered at {new Date().toISOString()}. Reload: a cache hit keeps the same timestamp.</p>
+
+		<h2>Cached by <code>Astro.cache.set()</code></h2>
+		<p>This page: <code>max-age=600</code>, <code>swr=60</code>, tag <code>home</code>.</p>
+
+		<h2>Cached by <code>routeRules</code></h2>
+		<ul>
+			{products.map((id) => <li><a href={`/products/${id}`}>Product {id}</a></li>)}
+		</ul>
+
+		<h2>Purge</h2>
+		<p>
+			<code>POST /api/revalidate</code> with <code>{'{ "tags": ["products"] }'}</code> or
+			<code>{'{ "path": "/products/1" }'}</code>.
+		</p>
+	</body>
+</html>

@@ -1,0 +1,25 @@
+# Matches biome.jsonc, which mirrors the Astro monorepo's formatting.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = tab
+indent_size = 2
+max_line_length = 100
+
+[*.{json,jsonc,json5,yml,yaml,md}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[{package.json,package-lock.json}]
+indent_style = space
+indent_size = 2
+
+[LICENSE]
+indent_style = unset
