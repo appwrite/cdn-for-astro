@@ -7,6 +7,24 @@ import factory from '../dist/cache/provider.js';
 const provider = /** @type {Required<ReturnType<typeof factory>>} */ (factory(undefined));
 const dummyRequest = new Request('https://example.appwrite.network/products/123');
 
+/** Make `response` behave like a relayed one, whose headers are immutable. */
+function freezeHeaders(response) {
+	Object.defineProperty(response, 'headers', {
+		value: new Proxy(response.headers, {
+			get(target, property) {
+				if (property === 'set') {
+					return () => {
+						throw new TypeError('immutable');
+					};
+				}
+				const value = Reflect.get(target, property);
+				return typeof value === 'function' ? value.bind(target) : value;
+			},
+		}),
+	});
+	return response;
+}
+
 /** Run a request through `onRequest`, rendering `response`. */
 function render(response, { provider: instance = provider } = {}) {
 	const request = dummyRequest;
@@ -117,25 +135,33 @@ describe('Appwrite cache provider', () => {
 			assert.equal(response.headers.get('Appwrite-CDN-Cache-Control'), null);
 		});
 
-		it('serves a response with immutable headers as-is', async () => {
-			const immutable = new Response('hello');
-			Object.defineProperty(immutable, 'headers', {
-				value: new Proxy(immutable.headers, {
-					get(target, property) {
-						if (property === 'set') {
-							return () => {
-								throw new TypeError('immutable');
-							};
-						}
-						const value = Reflect.get(target, property);
-						return typeof value === 'function' ? value.bind(target) : value;
-					},
-				}),
-			});
+		it('marks a response with immutable headers, on a copy of it', async () => {
+			const immutable = freezeHeaders(
+				new Response('hello', { status: 201, statusText: 'Created', headers: { 'X-Kept': 'yes' } }),
+			);
 
 			const response = await render(immutable);
-			assert.equal(response, immutable);
-			assert.equal(response.headers.get('Appwrite-CDN-Cache-Control'), null);
+			assert.notEqual(response, immutable);
+			assert.equal(response.headers.get('Appwrite-CDN-Cache-Control'), 'no-store');
+			assert.equal(response.headers.get('X-Kept'), 'yes');
+			assert.equal(response.status, 201);
+			assert.equal(response.statusText, 'Created');
+			assert.equal(await response.text(), 'hello');
+		});
+
+		it('marks a relayed redirect, which carries no body to copy', async () => {
+			const response = await render(
+				freezeHeaders(Response.redirect('https://example.appwrite.network/products', 302)),
+			);
+			assert.equal(response.headers.get('Appwrite-CDN-Cache-Control'), 'no-store');
+			assert.equal(response.status, 302);
+			assert.equal(response.headers.get('Location'), 'https://example.appwrite.network/products');
+		});
+
+		it('serves a response it cannot copy as-is', async () => {
+			// A network error response: its status is outside the constructible range
+			const unconstructible = freezeHeaders(Response.error());
+			assert.equal(await render(unconstructible), unconstructible);
 		});
 	});
 });

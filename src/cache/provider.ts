@@ -17,6 +17,35 @@ const CACHE_CONTROL_HEADERS = [CACHE_CONTROL_HEADER, 'Cache-Control']; // Includ
 
 const requestScope = new AsyncLocalStorage<RequestScope>();
 
+/**
+ * Marks a response the CDN must not cache, keeping its identity where it can.
+ * A relayed response (a proxied `fetch` result, a redirect) carries immutable
+ * headers, so the directive goes onto a copy of it instead.
+ */
+function withNoStore(response: Response): Response {
+	try {
+		response.headers.set(CACHE_CONTROL_HEADER, 'no-store');
+		return response;
+	} catch {
+		// Headers are immutable, so fall through to the copy below
+	}
+
+	const headers = new Headers(response.headers);
+	headers.set(CACHE_CONTROL_HEADER, 'no-store');
+
+	try {
+		return new Response(response.body, {
+			headers,
+			status: response.status,
+			statusText: response.statusText,
+		});
+	} catch {
+		// A network error response cannot be reconstructed, and carries no
+		// body for the CDN to cache either
+		return response;
+	}
+}
+
 const factory: CacheProviderFactory<AppwriteCacheConfig> = (config = {}) => {
 	const noStore = config.noStore ?? true;
 
@@ -53,12 +82,7 @@ const factory: CacheProviderFactory<AppwriteCacheConfig> = (config = {}) => {
 					const response = await next();
 
 					if (noStore && !CACHE_CONTROL_HEADERS.some((header) => response.headers.has(header))) {
-						try {
-							response.headers.set(CACHE_CONTROL_HEADER, 'no-store');
-						} catch {
-							// Ignore relayed response immutable headers exception
-							// Original response already has correct header
-						}
+						return withNoStore(response);
 					}
 
 					return response;
