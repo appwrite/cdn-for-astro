@@ -39,7 +39,7 @@ jobs:
       # here: merging that pull request and publishing a GitHub Release for the
       # new tag is what ships to npm, via release.yml.
       - name: Create or update the version pull request
-        uses: changesets/action@v1
+        uses: changesets/action@v2
         with:
           version: npm run version
           title: 'chore: version packages'
