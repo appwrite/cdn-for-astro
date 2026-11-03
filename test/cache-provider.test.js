@@ -28,7 +28,11 @@ function freezeHeaders(response) {
 /** Run a request through `onRequest`, rendering `response`. */
 function render(response, { provider: instance = provider } = {}) {
 	const request = dummyRequest;
-	return instance.onRequest({ request, url: new URL(request.url) }, async () => response);
+	const context = /** @type {Parameters<typeof instance.onRequest>[0]} */ ({
+		request,
+		url: new URL(request.url),
+	});
+	return instance.onRequest(context, async () => response);
 }
 
 describe('Appwrite cache provider', () => {
