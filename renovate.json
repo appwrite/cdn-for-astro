@@ -1,0 +1,12 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "packageRules": [
+    {
+      "description": "astro is a peer dependency: the supported range is a deliberate decision, not something to bump automatically.",
+      "matchFileNames": ["package.json"],
+      "matchPackageNames": ["astro"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    }
+  ]
+}
